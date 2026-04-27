@@ -50,4 +50,38 @@ public class ParkingService {
         // 5. Save ticket
         return ticketRepo.save(ticket);
     }
+    @Transactional
+    public Ticket checkOut(String plateNumber) {
+
+        // 1. Find active ticket
+        Ticket ticket = ticketRepo
+                .findByVehicle_PlateNumberAndStatus(plateNumber, "ACTIVE")
+                .orElseThrow(() -> new RuntimeException("No active ticket found"));
+
+        // 2. Set checkout time
+        ticket.setCheckOutTime(LocalDateTime.now());
+
+        // 3. Calculate duration (in hours)
+        long hours = java.time.Duration
+                .between(ticket.getCheckInTime(), ticket.getCheckOutTime())
+                .toHours();
+
+        if (hours == 0) {
+            hours = 1; // minimum charge
+        }
+
+        // 4. Calculate fee (example: 100 per hour)
+        double fee = hours * 100;
+        ticket.setFee(fee);
+
+        // 5. Update slot to AVAILABLE
+        ParkingSlot slot = ticket.getSlot();
+        slot.setStatus(SlotStatus.AVAILABLE);
+        slotRepo.save(slot);
+
+        // 6. Update ticket status
+        ticket.setStatus("COMPLETED");
+
+        return ticketRepo.save(ticket);
+    }
 }
