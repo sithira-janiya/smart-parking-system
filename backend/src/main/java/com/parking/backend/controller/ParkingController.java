@@ -20,4 +20,9 @@ public class ParkingController {
 
         return parkingService.checkIn(plateNumber, type);
     }
+
+    @PostMapping("/check-out")
+    public Ticket checkOut(@RequestParam String plateNumber) {
+        return parkingService.checkOut(plateNumber);
+    }
 }
