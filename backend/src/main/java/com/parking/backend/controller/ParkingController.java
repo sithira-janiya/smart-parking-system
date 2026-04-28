@@ -1,6 +1,7 @@
 package com.parking.backend.controller;
 
-import com.parking.backend.dto.*;
+import com.parking.backend.dto.CheckInRequest;
+import com.parking.backend.dto.CheckOutRequest;
 import com.parking.backend.entity.Ticket;
 import com.parking.backend.service.ParkingService;
 import jakarta.validation.Valid;
@@ -16,13 +17,20 @@ public class ParkingController {
         this.parkingService = parkingService;
     }
 
+    // ================= CHECK-IN =================
     @PostMapping("/check-in")
     public Ticket checkIn(@Valid @RequestBody CheckInRequest request) {
-        return parkingService.checkIn(request.getPlateNumber(), request.getType());
+        return parkingService.checkIn(
+                request.getPlateNumber(),
+                request.getType()
+        );
     }
 
+    // ================= CHECK-OUT =================
     @PostMapping("/check-out")
     public Ticket checkOut(@Valid @RequestBody CheckOutRequest request) {
-        return parkingService.checkOut(request.getPlateNumber());
+        return parkingService.checkOut(
+                request.getPlateNumber()
+        );
     }
 }
