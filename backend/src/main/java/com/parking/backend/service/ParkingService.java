@@ -1,13 +1,13 @@
 package com.parking.backend.service;
-import java.time.Duration;
-import java.time.LocalDateTime;
+
 import com.parking.backend.entity.*;
 import com.parking.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 
-
+// Check-in logic implementation
 @Service
 public class ParkingService {
 
@@ -50,7 +50,6 @@ public class ParkingService {
         // 5. Save ticket
         return ticketRepo.save(ticket);
     }
-
     @Transactional
     public Ticket checkOut(String plateNumber) {
 
@@ -60,27 +59,27 @@ public class ParkingService {
                 .orElseThrow(() -> new RuntimeException("No active ticket found"));
 
         // 2. Set checkout time
-        ticket.setCheckOutTime(java.time.LocalDateTime.now());
+        ticket.setCheckOutTime(LocalDateTime.now());
 
-        // 3. Calculate duration
+        // 3. Calculate duration (in hours)
         long hours = java.time.Duration
                 .between(ticket.getCheckInTime(), ticket.getCheckOutTime())
                 .toHours();
 
         if (hours == 0) {
-            hours = 1;
+            hours = 1; // minimum charge
         }
 
-        // 4. Calculate fee
+        // 4. Calculate fee (example: 100 per hour)
         double fee = hours * 100;
         ticket.setFee(fee);
 
-        // 5. Free slot
+        // 5. Update slot to AVAILABLE
         ParkingSlot slot = ticket.getSlot();
         slot.setStatus(SlotStatus.AVAILABLE);
         slotRepo.save(slot);
 
-        // 6. Complete ticket
+        // 6. Update ticket status
         ticket.setStatus("COMPLETED");
 
         return ticketRepo.save(ticket);
