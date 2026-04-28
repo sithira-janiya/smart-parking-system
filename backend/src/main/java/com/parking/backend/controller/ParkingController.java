@@ -1,7 +1,10 @@
 package com.parking.backend.controller;
 
-import com.parking.backend.entity.*;
+import com.parking.backend.dto.CheckInRequest;
+import com.parking.backend.dto.CheckOutRequest;
+import com.parking.backend.entity.Ticket;
 import com.parking.backend.service.ParkingService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,15 +17,20 @@ public class ParkingController {
         this.parkingService = parkingService;
     }
 
+    // ================= CHECK-IN =================
     @PostMapping("/check-in")
-    public Ticket checkIn(@RequestParam String plateNumber,
-                          @RequestParam VehicleType type) {
-
-        return parkingService.checkIn(plateNumber, type);
+    public Ticket checkIn(@Valid @RequestBody CheckInRequest request) {
+        return parkingService.checkIn(
+                request.getPlateNumber(),
+                request.getType()
+        );
     }
 
+    // ================= CHECK-OUT =================
     @PostMapping("/check-out")
-    public Ticket checkOut(@RequestParam String plateNumber) {
-        return parkingService.checkOut(plateNumber);
+    public Ticket checkOut(@Valid @RequestBody CheckOutRequest request) {
+        return parkingService.checkOut(
+                request.getPlateNumber()
+        );
     }
 }
