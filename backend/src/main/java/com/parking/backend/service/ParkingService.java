@@ -1,11 +1,12 @@
 package com.parking.backend.service;
-
+import java.time.Duration;
+import java.time.LocalDateTime;
 import com.parking.backend.entity.*;
 import com.parking.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+
 
 @Service
 public class ParkingService {
@@ -47,6 +48,41 @@ public class ParkingService {
         ticket.setStatus("ACTIVE");
 
         // 5. Save ticket
+        return ticketRepo.save(ticket);
+    }
+
+    @Transactional
+    public Ticket checkOut(String plateNumber) {
+
+        // 1. Find active ticket
+        Ticket ticket = ticketRepo
+                .findByVehicle_PlateNumberAndStatus(plateNumber, "ACTIVE")
+                .orElseThrow(() -> new RuntimeException("No active ticket found"));
+
+        // 2. Set checkout time
+        ticket.setCheckOutTime(java.time.LocalDateTime.now());
+
+        // 3. Calculate duration
+        long hours = java.time.Duration
+                .between(ticket.getCheckInTime(), ticket.getCheckOutTime())
+                .toHours();
+
+        if (hours == 0) {
+            hours = 1;
+        }
+
+        // 4. Calculate fee
+        double fee = hours * 100;
+        ticket.setFee(fee);
+
+        // 5. Free slot
+        ParkingSlot slot = ticket.getSlot();
+        slot.setStatus(SlotStatus.AVAILABLE);
+        slotRepo.save(slot);
+
+        // 6. Complete ticket
+        ticket.setStatus("COMPLETED");
+
         return ticketRepo.save(ticket);
     }
 }
