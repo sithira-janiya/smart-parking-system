@@ -61,8 +61,6 @@ public class ParkingService {
                 .toHours();
 
         if (hours == 0) hours = 1;
-
-        // 🔥 Dynamic Pricing
         double rate;
 
         switch (ticket.getVehicle().getVehicleType()) {
@@ -83,5 +81,21 @@ public class ParkingService {
         ticket.setStatus("COMPLETED");
 
         return ticketRepo.save(ticket);
+    }
+
+    public long getAvailableSlots() {
+        return slotRepo.countByStatus(SlotStatus.AVAILABLE);
+    }
+
+    public long getActiveVehicles() {
+        return ticketRepo.findByStatus("ACTIVE").size();
+    }
+
+    public double getTotalRevenue() {
+
+        return ticketRepo.findAll().stream()
+                .filter(t -> t.getFee() != null)
+                .mapToDouble(Ticket::getFee)
+                .sum();
     }
 }

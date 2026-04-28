@@ -33,4 +33,19 @@ public class ParkingController {
                 request.getPlateNumber()
         );
     }
+
+    @GetMapping("/available-slots")
+    public long availableSlots() {
+        return parkingService.getAvailableSlots();
+    }
+
+    @GetMapping("/active")
+    public long activeVehicles() {
+        return parkingService.getActiveVehicles();
+    }
+
+    @GetMapping("/revenue")
+    public double totalRevenue() {
+        return parkingService.getTotalRevenue();
+    }
 }
