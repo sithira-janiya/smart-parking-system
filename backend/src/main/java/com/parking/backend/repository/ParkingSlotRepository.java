@@ -9,9 +9,11 @@ import java.util.Optional;
 
 public interface ParkingSlotRepository extends JpaRepository<ParkingSlot, Long> {
 
+    long countByStatus(SlotStatus status);
     // Find first available slot for given vehicle type
     Optional<ParkingSlot> findFirstByVehicleTypeAndStatus(
             VehicleType vehicleType,
             SlotStatus status
     );
+
 }
