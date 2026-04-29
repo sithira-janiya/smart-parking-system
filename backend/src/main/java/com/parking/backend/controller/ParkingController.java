@@ -3,6 +3,7 @@ package com.parking.backend.controller;
 import com.parking.backend.dto.CheckInRequest;
 import com.parking.backend.dto.CheckOutRequest;
 import com.parking.backend.entity.Ticket;
+import com.parking.backend.dto.response.TicketResponse;
 import com.parking.backend.service.ParkingService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class ParkingController {
 
     // ================= CHECK-IN =================
     @PostMapping("/check-in")
-    public Ticket checkIn(@Valid @RequestBody CheckInRequest request) {
+    public TicketResponse checkIn(@Valid @RequestBody CheckInRequest request) {
         return parkingService.checkIn(
                 request.getPlateNumber(),
                 request.getType()
@@ -28,7 +29,7 @@ public class ParkingController {
 
     // ================= CHECK-OUT =================
     @PostMapping("/check-out")
-    public Ticket checkOut(@Valid @RequestBody CheckOutRequest request) {
+    public TicketResponse checkOut(@Valid @RequestBody CheckOutRequest request) {
         return parkingService.checkOut(
                 request.getPlateNumber()
         );
