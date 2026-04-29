@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.parking.backend.exception.ResourceNotFoundException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class ParkingService {
@@ -127,5 +128,27 @@ public class ParkingService {
                 t.getCheckOutTime(),
                 t.getFee()
         );
+    }
+
+    public ParkingSlot createSlot(String slotNumber, VehicleType type) {
+
+        if (slotRepo.existsBySlotNumber(slotNumber)) {
+            throw new RuntimeException("Slot already exists");
+        }
+
+        ParkingSlot slot = new ParkingSlot();
+        slot.setSlotNumber(slotNumber);
+        slot.setVehicleType(type);
+        slot.setStatus(SlotStatus.AVAILABLE);
+
+        return slotRepo.save(slot);
+    }
+
+    public List<ParkingSlot> getAllSlots() {
+        return slotRepo.findAll();
+    }
+
+    public void deleteSlot(Long id) {
+        slotRepo.deleteById(id);
     }
 }
