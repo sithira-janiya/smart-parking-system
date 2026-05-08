@@ -1,87 +1,86 @@
 # Developer Guide
 
-## Architecture Overview
+## Scope
 
-The backend follows a layered Spring Boot architecture:
+This guide documents the current **backend-first** Smart Parking System implementation and the planned frontend integration path.
 
-1. **Controller layer**: HTTP API endpoints (`/api/auth`, `/api/parking`, `/api/admin`)
-2. **Service layer**: business logic for auth and parking operations
-3. **Repository layer**: JPA data access for users, vehicles, slots, and tickets
-4. **Security layer**: JWT, request filtering, authentication provider configuration
-5. **Persistence layer**: MySQL with Hibernate/JPA entities
+## Backend Architecture (Controller -> Service -> Repository)
 
-## Folder Structure
+The backend uses a layered Spring Boot design:
 
-```text
-backend/src/main/java/com/parking/backend
-├── controller
-│   ├── AuthController.java
-│   ├── ParkingController.java
-│   └── AdminController.java
-├── service
-│   ├── AuthService.java
-│   └── ParkingService.java
-├── security
-│   ├── SecurityConfig.java
-│   ├── CustomUserDetailsService.java
-│   ├── JwtFilter.java
-│   └── JwtUtil.java
-├── repository
-│   ├── UserRepository.java
-│   ├── VehicleRepository.java
-│   ├── ParkingSlotRepository.java
-│   └── TicketRepository.java
-├── entity
-│   ├── User.java
-│   ├── Vehicle.java
-│   ├── ParkingSlot.java
-│   ├── Ticket.java
-│   ├── VehicleType.java
-│   └── SlotStatus.java
-├── dto
-│   ├── AuthRequest.java
-│   ├── CheckInRequest.java
-│   ├── CheckOutRequest.java
-│   ├── AdminSlotRequest.java
-│   └── response
-│       ├── AuthResponse.java
-│       └── TicketResponse.java
-└── exception
-    ├── GlobalExceptionHandler.java
-    └── ResourceNotFoundException.java
-```
+1. **Controller layer**: receives HTTP requests and returns API responses.
+2. **Service layer**: contains business logic (authentication, parking lifecycle, pricing).
+3. **Repository layer**: uses Spring Data JPA to query/persist MySQL entities.
 
-## Core Services
+### Current Modules
 
-| Service | Responsibility |
+| Module | Purpose |
 |---|---|
-| `AuthService` | Validates credentials via `AuthenticationManager`, generates JWT |
-| `ParkingService` | Handles check-in, check-out, slot status transitions, fee calculation |
+| `controller` | `AuthController`, `ParkingController`, `AdminController` |
+| `service` | `AuthService`, `ParkingService` |
+| `repository` | User, slot, vehicle, ticket data access |
+| `entity` | JPA entities (`User`, `Vehicle`, `ParkingSlot`, `Ticket`) |
+| `security` | JWT + Spring Security integration |
+| `dto` | Request/response payload models |
+| `exception` | Global exception handling |
 
-## Security Components
+## Security Flow (JWT + Filter + AuthenticationManager)
 
-| Component | Responsibility |
-|---|---|
-| `SecurityConfig` | Configures filter chain, endpoint access rules, BCrypt, auth provider |
-| `CustomUserDetailsService` | Loads users from MySQL by username for authentication |
-| `JwtUtil` | Generates token and extracts claims (username, role) |
-| `JwtFilter` | Reads bearer token, validates claims, sets `SecurityContext` |
+1. `POST /api/auth/login` enters `AuthController`.
+2. `AuthService` calls `AuthenticationManager.authenticate(...)`.
+3. `DaoAuthenticationProvider` delegates user loading to `CustomUserDetailsService`.
+4. `CustomUserDetailsService` fetches the user from MySQL via `UserRepository`.
+5. Password verification is handled by `BCryptPasswordEncoder`.
+6. On success, `AuthService` generates a JWT using `JwtUtil` with username + role claim.
+7. For protected APIs, `JwtFilter` reads `Authorization: Bearer <token>`, extracts claims, and sets the authenticated security context.
 
-## JWT + Role-Based Flow
+## Role-Based Authorization Flow
 
-1. User calls `POST /api/auth/login`.
-2. `AuthenticationManager` authenticates using DB user + BCrypt hash.
-3. `AuthService` generates JWT including role claim.
-4. Client sends token in `Authorization: Bearer <token>`.
-5. `JwtFilter` extracts username/role and builds authenticated context.
-6. Security rules enforce access:
-   - `/api/auth/**` → public
-   - `/api/admin/**` → `ADMIN`
-   - `/api/parking/**` → `USER` or `ADMIN`
+Configured in `SecurityConfig`:
 
-## Data Model Notes
+- `/api/auth/**` -> public
+- `/api/admin/**` -> `ADMIN`
+- `/api/parking/**` -> `USER` or `ADMIN`
 
-- `User`: stores `username`, BCrypt `password`, and `role`
-- `Vehicle`: unique `plateNumber` + `vehicleType`
-- `ParkingSlot`: `slotNumber`, `status`, `vehicleType`
-- `Ticket`: links `Vehicle` + `ParkingSlot`, tracks in/out times, fee, and status
+This is URL-level authorization with stateless JWT authentication.
+
+## Database Interaction Flow
+
+### Authentication path
+
+`AuthController -> AuthService -> AuthenticationManager -> CustomUserDetailsService -> UserRepository -> MySQL(users)`
+
+### Parking check-in path
+
+`ParkingController -> ParkingService -> VehicleRepository + ParkingSlotRepository + TicketRepository -> MySQL`
+
+### Parking check-out path
+
+`ParkingController -> ParkingService -> TicketRepository + ParkingSlotRepository -> MySQL`
+
+## Domain Model Summary
+
+| Entity | Key fields | Notes |
+|---|---|---|
+| `User` | `id`, `username`, `password`, `role` | Password stored as BCrypt hash |
+| `Vehicle` | `id`, `plateNumber`, `vehicleType` | Unique plate number |
+| `ParkingSlot` | `id`, `slotNumber`, `status`, `vehicleType` | Tracks availability |
+| `Ticket` | `id`, `vehicle`, `slot`, `checkInTime`, `checkOutTime`, `fee`, `status` | Active/completed lifecycle |
+
+## Future Frontend Integration
+
+Planned frontend will:
+
+1. Authenticate via `/api/auth/login`
+2. Persist access token client-side
+3. Attach bearer token to API calls
+4. Enforce route-level role restrictions in UI
+5. Use dedicated dashboard/admin screens that align with `/api/parking/**` and `/api/admin/**`
+
+See `docs/FRONTEND_PLAN.md` for the implementation plan.
+
+## 🧠 System Maturity Level
+
+**Intermediate**
+
+Reason: core business APIs, JWT auth, and role restrictions are implemented and working, but production hardening items (refresh tokens, logout, OpenAPI docs, observability, CI/CD, deployment packaging) are still pending.
