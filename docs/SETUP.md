@@ -5,9 +5,23 @@
 - Java 17
 - Maven 3.9+
 - MySQL 8+
-- Postman (or any API client)
+- API client (Postman/Insomnia/cURL)
 
-## 1. Database Setup
+## 1. Backend Setup
+
+```bash
+cd backend
+mvn clean install
+mvn spring-boot:run
+```
+
+Default server URL:
+
+```text
+http://localhost:8080
+```
+
+## 2. Database Setup (MySQL)
 
 Create database:
 
@@ -15,7 +29,7 @@ Create database:
 CREATE DATABASE smart_parking;
 ```
 
-Default app config (`backend/src/main/resources/application.properties`):
+Set DB config in `backend/src/main/resources/application.properties`:
 
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/smart_parking
@@ -28,31 +42,16 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 ```
 
-Create a default admin user (password must be BCrypt hash):
+Seed an admin user (BCrypt password hash required):
 
 ```sql
 INSERT INTO users(username, password, role)
 VALUES ('admin', '$2a$10$replace_with_bcrypt_hash_for_1234', 'ADMIN');
 ```
 
-If needed, generate hash using the project `PasswordGenerator` helper.
-
-## 2. Run the Backend
-
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-Application starts on:
-
-```text
-http://localhost:8080
-```
-
 ## 3. Postman Testing
 
-### Step A: Login
+### A. Login
 
 `POST http://localhost:8080/api/auth/login`
 
@@ -63,29 +62,48 @@ http://localhost:8080
 }
 ```
 
-Copy `token` from response.
+Copy the returned JWT.
 
-### Step B: Set Authorization Header
+### B. Call Protected APIs
 
-For protected endpoints, add:
+Use header:
 
 ```text
 Authorization: Bearer <token>
 ```
 
-### Step C: Try Endpoints
+Recommended smoke test order:
 
-- `POST /api/admin/slots` (ADMIN only)
-- `POST /api/parking/check-in`
-- `POST /api/parking/check-out`
-- `GET /api/parking/available-slots`
-- `GET /api/parking/active`
-- `GET /api/parking/revenue`
+1. `POST /api/admin/slots`
+2. `POST /api/parking/check-in`
+3. `POST /api/parking/check-out`
+4. `GET /api/parking/available-slots`
+5. `GET /api/parking/active`
+6. `GET /api/parking/revenue`
 
-## 4. Common Issues
+## 4. Future Frontend Setup (Placeholder)
 
-| Issue | Likely Cause | Fix |
+Frontend is not implemented yet. Planned flow:
+
+1. Create frontend app (React recommended)
+2. Configure API base URL to backend (`http://localhost:8080`)
+3. Store JWT after login
+4. Add Axios interceptor for bearer token injection
+5. Add route guards for `ADMIN` and `USER`
+
+See `docs/FRONTEND_PLAN.md` for details.
+
+## 5. Troubleshooting
+
+| Problem | Cause | Fix |
 |---|---|---|
-| 401 Invalid username or password | Wrong plain password or wrong BCrypt hash | Recreate BCrypt hash and update DB |
-| 403 Forbidden | Role mismatch (`ADMIN` vs `USER`) | Verify `role` column in `users` table |
-| DB connection failure | Wrong URL/credentials | Correct datasource properties |
+| 401 on login | Password hash mismatch | Recreate BCrypt hash and update `users.password` |
+| 403 on admin endpoint | Token role is not `ADMIN` | Verify `users.role` and re-login |
+| MySQL connection failure | Invalid DB credentials/URL | Correct datasource properties |
+| Token works then expires | 1-hour token expiry | Re-authenticate (refresh token not implemented yet) |
+
+## 🧠 System Maturity Level
+
+**Intermediate**
+
+Core backend functionality is complete for authentication/authorization and parking operations, while advanced production capabilities are still pending.
