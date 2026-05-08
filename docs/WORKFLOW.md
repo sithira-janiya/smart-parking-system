@@ -1,71 +1,80 @@
 # Workflow
 
-## 1. Login Flow (JWT)
+## 1. Login -> JWT -> Filter -> Controller
 
 ```text
-Client -> /api/auth/login -> AuthController -> AuthService
-       -> AuthenticationManager -> DaoAuthenticationProvider
-       -> CustomUserDetailsService -> UserRepository (MySQL)
-       -> BCrypt password match
-       -> JwtUtil.generateToken(username, role)
-       -> token returned to client
+Client
+  -> POST /api/auth/login
+  -> AuthController
+  -> AuthService
+  -> AuthenticationManager
+  -> DaoAuthenticationProvider
+  -> CustomUserDetailsService -> UserRepository -> MySQL(users)
+  -> BCrypt password verification
+  -> JwtUtil.generateToken(username, role)
+  -> JWT returned to client
 ```
 
-### Key Points
-
-- Authentication is database-backed (no in-memory default user).
-- Password check uses BCrypt through `DaoAuthenticationProvider`.
-- JWT contains subject (`username`) and `role` claim.
-
-## 2. Request Flow (Filter -> Controller)
+For subsequent requests:
 
 ```text
-Incoming request
+Client (Bearer token)
   -> SecurityFilterChain
-  -> JwtFilter reads Authorization header
-  -> JwtUtil validates token and extracts username/role
-  -> SecurityContext is populated
-  -> Access rules are evaluated
-  -> Controller method executes (or 401/403)
+  -> JwtFilter extracts username + role
+  -> SecurityContext authenticated
+  -> Authorization check
+  -> Target controller method
 ```
 
-### Access Rules
-
-- `/api/auth/**`: public
-- `/api/admin/**`: `ADMIN`
-- `/api/parking/**`: `USER` or `ADMIN`
-
-## 3. Check-In Flow
+## 2. Check-In Lifecycle
 
 ```text
 POST /api/parking/check-in
-  -> validate request (plate, type)
-  -> find or create vehicle
-  -> find first available slot by vehicle type
-  -> mark slot OCCUPIED
+  -> validate input (plateNumber, type)
+  -> find existing vehicle OR create vehicle
+  -> find first AVAILABLE slot for vehicle type
+  -> update slot status to OCCUPIED
   -> create ACTIVE ticket with checkInTime
   -> return TicketResponse
 ```
 
-## 4. Check-Out Flow
+## 3. Check-Out Lifecycle
 
 ```text
 POST /api/parking/check-out
-  -> find ACTIVE ticket by plate
+  -> locate ACTIVE ticket by plate number
   -> set checkOutTime
-  -> compute parking duration (minimum 1 hour)
+  -> compute duration (min 1 hour)
   -> calculate fee by vehicle type
-  -> mark slot AVAILABLE
+  -> update slot status to AVAILABLE
   -> mark ticket COMPLETED
   -> return TicketResponse
 ```
 
-## 5. Fee Calculation Rules
+## 4. Role-Based Access Flow
 
-| Vehicle Type | Hourly Rate |
+```text
+Request arrives with JWT
+  -> role claim extracted in JwtFilter
+  -> authority mapped to ROLE_<role>
+  -> SecurityConfig route rules applied:
+       /api/auth/**     -> permitAll
+       /api/admin/**    -> ROLE_ADMIN
+       /api/parking/**  -> ROLE_USER or ROLE_ADMIN
+```
+
+If role/authority does not satisfy endpoint rule, access is rejected with `403`.
+
+## 5. Pricing Rules
+
+| Vehicle type | Rate per hour |
 |---|---|
 | BIKE | 50 |
 | CAR | 100 |
 | VAN | 150 |
 
-Minimum billed duration is 1 hour.
+## 🧠 System Maturity Level
+
+**Intermediate**
+
+Operational workflows are coherent and complete for backend APIs, but lifecycle extensions (refresh/logout/reservations) are still pending.
