@@ -2,14 +2,32 @@
 
 Base URL: `http://localhost:8080`
 
-## Authentication
+## Authorization Header
+
+For protected endpoints, send:
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+Example:
+
+```http
+GET /api/parking/available-slots HTTP/1.1
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+
+---
+
+## Auth APIs
 
 ### `POST /api/auth/login`
 
 | Field | Value |
 |---|---|
-| Authorization | Public |
-| Purpose | Authenticate user and return JWT token |
+| Role required | Public |
+| Purpose | Authenticate user and return JWT |
 
 **Request**
 
@@ -20,7 +38,7 @@ Base URL: `http://localhost:8080`
 }
 ```
 
-**Response (200)**
+**Response 200**
 
 ```json
 {
@@ -28,7 +46,7 @@ Base URL: `http://localhost:8080`
 }
 ```
 
-**Response (401)**
+**Response 401**
 
 ```json
 {
@@ -44,8 +62,15 @@ Base URL: `http://localhost:8080`
 
 | Field | Value |
 |---|---|
-| Authorization | `USER` or `ADMIN` |
-| Purpose | Create/resolve vehicle, reserve matching available slot, create active ticket |
+| Role required | `USER` or `ADMIN` |
+| Purpose | Check in vehicle, allocate slot, create active ticket |
+
+**Headers**
+
+```http
+Authorization: Bearer <jwt-token>
+Content-Type: application/json
+```
 
 **Request**
 
@@ -56,7 +81,7 @@ Base URL: `http://localhost:8080`
 }
 ```
 
-**Response (200)**
+**Response 200**
 
 ```json
 {
@@ -75,8 +100,15 @@ Base URL: `http://localhost:8080`
 
 | Field | Value |
 |---|---|
-| Authorization | `USER` or `ADMIN` |
-| Purpose | Complete active ticket, calculate fee, free slot |
+| Role required | `USER` or `ADMIN` |
+| Purpose | Complete active ticket, free slot, calculate fee |
+
+**Headers**
+
+```http
+Authorization: Bearer <jwt-token>
+Content-Type: application/json
+```
 
 **Request**
 
@@ -86,7 +118,7 @@ Base URL: `http://localhost:8080`
 }
 ```
 
-**Response (200)**
+**Response 200**
 
 ```json
 {
@@ -105,10 +137,16 @@ Base URL: `http://localhost:8080`
 
 | Field | Value |
 |---|---|
-| Authorization | `USER` or `ADMIN` |
-| Purpose | Get number of available slots |
+| Role required | `USER` or `ADMIN` |
+| Purpose | Return count of currently available slots |
 
-**Response (200)**
+**Headers**
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+**Response 200**
 
 ```json
 8
@@ -118,10 +156,16 @@ Base URL: `http://localhost:8080`
 
 | Field | Value |
 |---|---|
-| Authorization | `USER` or `ADMIN` |
-| Purpose | Get number of active parked vehicles |
+| Role required | `USER` or `ADMIN` |
+| Purpose | Return number of active parking tickets |
 
-**Response (200)**
+**Headers**
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+**Response 200**
 
 ```json
 3
@@ -131,10 +175,16 @@ Base URL: `http://localhost:8080`
 
 | Field | Value |
 |---|---|
-| Authorization | `USER` or `ADMIN` |
-| Purpose | Get total accumulated revenue from completed tickets |
+| Role required | `USER` or `ADMIN` |
+| Purpose | Return cumulative revenue from completed tickets |
 
-**Response (200)**
+**Headers**
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+**Response 200**
 
 ```json
 1250.0
@@ -148,8 +198,15 @@ Base URL: `http://localhost:8080`
 
 | Field | Value |
 |---|---|
-| Authorization | `ADMIN` |
-| Purpose | Create new parking slot |
+| Role required | `ADMIN` |
+| Purpose | Create a parking slot |
+
+**Headers**
+
+```http
+Authorization: Bearer <jwt-token>
+Content-Type: application/json
+```
 
 **Request**
 
@@ -160,7 +217,7 @@ Base URL: `http://localhost:8080`
 }
 ```
 
-**Response (200)**
+**Response 200**
 
 ```json
 {
@@ -175,10 +232,16 @@ Base URL: `http://localhost:8080`
 
 | Field | Value |
 |---|---|
-| Authorization | `ADMIN` |
+| Role required | `ADMIN` |
 | Purpose | List all parking slots |
 
-**Response (200)**
+**Headers**
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+**Response 200**
 
 ```json
 [
@@ -195,10 +258,16 @@ Base URL: `http://localhost:8080`
 
 | Field | Value |
 |---|---|
-| Authorization | `ADMIN` |
-| Purpose | Delete parking slot by ID |
+| Role required | `ADMIN` |
+| Purpose | Delete a parking slot by ID |
 
-**Response (200)**
+**Headers**
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+**Response 200**
 
 ```json
 "Slot deleted"
@@ -206,11 +275,12 @@ Base URL: `http://localhost:8080`
 
 ---
 
-## Error Behavior
+## Standard Error Responses
 
-| Scenario | Status | Body |
+| Scenario | Status | Example body |
 |---|---|---|
-| Validation failure | 400 | `{ "field": "message" }` |
-| Not found resource | 404 | `{ "error": "..." }` |
-| Auth failure | 401 | `{ "error": "Invalid username or password" }` |
-| Unexpected server error | 500 | `{ "error": "Something went wrong" }` |
+| Validation error | 400 | `{ "plateNumber": "Plate number is required" }` |
+| Unauthorized | 401 | `{ "error": "Invalid username or password" }` |
+| Forbidden | 403 | Spring Security default forbidden response |
+| Not found | 404 | `{ "error": "No active ticket found" }` |
+| Server error | 500 | `{ "error": "Something went wrong" }` |
