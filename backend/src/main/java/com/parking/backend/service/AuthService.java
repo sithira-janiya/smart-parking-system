@@ -47,7 +47,8 @@ public class AuthService {
             // Pass role into JWT
             String token = jwtUtil.generateToken(principal.getUsername(), role);
 
-            return new AuthResponse(token);
+            // Return token and role so frontend can redirect appropriately
+            return new AuthResponse(token, role);
 
         } catch (BadCredentialsException ex) {
             throw new ResponseStatusException(UNAUTHORIZED, "Invalid username or password");
