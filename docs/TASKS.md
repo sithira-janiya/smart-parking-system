@@ -1,128 +1,125 @@
-# Task Tracking
+# Consolidated Task List — Frontend · Backend · Database
 
 Status legend:
 
-- `[x]` completed
-- `[ ]` pending
+- [x] completed
+- [ ] pending
 
-Progress rule: a phase is counted as completed only when **all tasks in that phase** are checked.
+Summary: Core backend, authentication, and parking flows are implemented. Remaining work focuses on token lifecycle, API publishing, frontend UIs, and production deployment.
 
-## 🧩 Phase 1 — Project Setup
+## **Completed Highlights**
 
-**Description:** Base platform and project foundation.
-
-- [x] Spring Boot project setup
-- [x] MySQL configuration
-- [x] Basic entity creation
-- [ ] Structured logging setup (profiles/levels/appender strategy)
-
-## 🔐 Phase 2 — Authentication
-
-**Description:** User login and credential verification.
-
-- [x] User entity and repository lookup
-- [x] BCrypt password encoder integration
-- [x] Login API (`/api/auth/login`)
-- [x] AuthenticationManager + DaoAuthenticationProvider integration
-- [x] CustomUserDetailsService with DB-backed user loading
-
-## 🔑 Phase 3 — JWT Security
-
-**Description:** Stateless token-based security.
-
-- [x] JWT generation on successful login
-- [x] JwtUtil implementation (username + role claims)
-- [x] JwtFilter integration in SecurityFilterChain
-- [x] Token validation in request path
-- [ ] Refresh token system
-- [ ] Logout mechanism (token revocation/invalidation strategy)
-
-## 👮 Phase 4 — Authorization
-
-**Description:** Role-based access control by endpoint and method.
-
-- [x] Role field in user model
-- [x] Role extraction and authority mapping from JWT
-- [x] ADMIN vs USER URL-level restriction
-- [x] `/api/admin/**` secured for ADMIN
-- [ ] Method-level authorization (`@PreAuthorize`) rollout
-
-## 🚗 Phase 5 — Parking Core
-
-**Description:** Core parking operations and ticket lifecycle.
-
-- [x] Vehicle entity and persistence
-- [x] Parking slot management APIs
-- [x] Check-in API and ticket activation
-- [x] Check-out API and ticket completion
-- [x] Fee calculation by vehicle type and duration
-- [ ] Reservation/pre-booking system
-
-## 📊 Phase 6 — Quality & Platform Enhancements
-
-**Description:** Documentation, resilience, and API quality upgrades.
-
-- [ ] Swagger / OpenAPI integration
-- [x] Global exception handling baseline
-- [ ] Validation layer improvements (standardized payload + deeper business validation)
-- [ ] Dashboard analytics expansion
-
-## 🚀 Phase 7 — Production Readiness
-
-**Description:** Deployability, operations, and hardening.
-
-- [ ] Docker setup
-- [ ] CI/CD pipeline
-- [ ] Centralized logging and monitoring
-- [ ] Rate limiting
-- [ ] Security hardening checklist
+- **Backend:** Spring Boot project, core entities, auth flow, parking check-in/out, fee calculation.
+- **Database:** JPA entities and repositories for users, vehicles, parking_slots, tickets.
+- **Security:** BCrypt passwords, JWT generation, JwtFilter and SecurityFilterChain integration, role-based URL restrictions.
 
 ---
 
-## 🖥 Backend Tasks
+## **Backend Tasks**
 
-- [x] Layered architecture (Controller -> Service -> Repository)
-- [x] Auth and parking business services
-- [x] DTO-based request/response contracts
-- [ ] Swagger/OpenAPI publishing
-- [ ] Validation and error contract standardization
+- **Completed:**
+  - [x] Controller → Service → Repository layers
+  - [x] AuthService, ParkingService core logic
+  - [x] DTO request/response contracts
 
-## 🗄 Database Tasks
+- **In Progress / Near-term:**
+  - [ ] Refresh token implementation
+    - Description: Add refresh token issuance, secure storage, and refresh endpoint.
+    - Command to implement:
+      - `cd backend && mvn -DskipTests=true test-compile`
+      - Edit `AuthService`, add `RefreshToken` entity, repository and controller endpoint `/api/auth/refresh`.
+    - After completion: run `mvn -DskipTests=false verify` and add integration test for refresh flow.
+  - [ ] Logout / token revocation strategy
+    - Description: Implement token blacklist or revoke-by-version in DB.
+    - Command to implement: modify `SecurityConfig` and add `logout` endpoint; run `mvn -DskipTests=true test-compile` to compile.
+    - After completion: document revocation approach in README and update tests.
 
-- [x] Core schema via JPA entities (`users`, `vehicles`, `parking_slots`, `tickets`)
-- [x] Repository interfaces for all core entities
-- [x] Relational mapping for ticket-vehicle-slot associations
-- [ ] Migration tooling (Flyway/Liquibase)
-- [ ] Index tuning and performance profiling
-
-## 🌐 Frontend Tasks (future)
-
-- [ ] Frontend project bootstrap
-- [ ] Login UI and token storage flow
-- [ ] Dashboard UI for slot/vehicle/revenue metrics
-- [ ] Admin slot management screens
-- [ ] Protected routing by role (ADMIN/USER)
-
-## 🔐 Security Tasks
-
-- [x] Spring Security filter chain configuration
-- [x] BCrypt password verification
-- [x] JWT login flow
-- [x] Role-based authorization (ADMIN vs USER)
-- [ ] Refresh token implementation
-- [ ] Logout/token invalidation mechanism
-- [ ] Security hardening (headers, key management, audit trail)
+- **Planned / Nice-to-have:**
+  - [ ] Method-level authorization rollout (`@PreAuthorize`)
+    - Command: `cd backend && mvn -DskipTests=true test-compile` then annotate controllers and run `mvn -q -DskipTests=false test`.
 
 ---
 
-## 📈 Project Progress
+## **Database Tasks**
 
-- Completed Phases: **1 / 7** (Phase 2 complete)
-- Current Phase: **Phase 3 — JWT Security**
-- Next Goal: **Implement refresh token + logout mechanism to complete Phase 3**
+- **Completed:**
+  - [x] Entity mappings, relationships, repositories
 
-## 🧠 System Maturity Level
+- **Planned / Critical:**
+  - [ ] Database migrations (Flyway or Liquibase)
+    - Description: Add migration scripts and enforce schema changes in CI/deploy.
+    - Command to implement:
+      - `cd backend && mvn org.flywaydb:flyway-maven-plugin:info`
+      - Add `src/main/resources/db/migration/V1__init.sql` and run `mvn flyway:migrate` during CI.
+    - After completion: include migration step in deployment pipeline.
+  - [ ] Indexes and profiling
+    - Command: run your DB explain profile queries; script suggestions saved to docs/DB_INDEXING.md.
 
-**Intermediate**
+---
 
-The system has working authentication, authorization, and core parking workflows, but key production-grade capabilities (refresh/logout, OpenAPI, deployment/ops hardening) are still pending.
+## **Frontend Tasks**
+
+- **Current state (repo present):** frontend skeleton, axios instance, pages and utils exist.
+
+- **Immediate:**
+  - [ ] Login UI and token storage
+    - Description: Create login page, call `/api/auth/login`, store JWT in memory/HttpOnly cookie.
+    - Command to implement:
+      - `cd frontend && npm install`
+      - `npm run dev`
+    - After completion: verify login flow by calling backend and confirming protected route access.
+  - [ ] Protected routing and role checks
+    - Command: implement role-check in `utils/auth.ts`, run `npm run build` and test flows.
+
+- **Feature UIs (next):**
+  - [ ] Dashboard for slots, active vehicles, revenue
+  - [ ] Admin slot management screens
+
+---
+
+## **Quality, Observability, and CI/CD**
+
+- **Must-have before production:**
+  - [ ] Dockerize backend and frontend
+    - Command: in root make `docker-compose.yml` and run `docker compose up --build`.
+    - After completion: test end-to-end locally and push images to registry.
+  - [ ] CI pipeline (build, test, migrate, image push)
+    - Command: Add GitHub Actions workflow `.github/workflows/ci.yml` that runs `mvn -B -DskipTests=false verify` and `npm ci && npm run build`.
+  - [ ] Centralized logging and monitoring (AppInsights/ELK/Prometheus)
+
+---
+
+## **Deployment Roadmap (phased)**
+
+1. Phase: Local CI & Docker — Build images and run full stack locally.
+   - Tasks: Dockerize services, add `docker-compose.yml`.
+   - Commands:
+     - `docker build -t smart-parking-backend ./backend`
+     - `docker build -t smart-parking-frontend ./frontend`
+     - `docker compose up --build`
+   - Completion check: E2E flows (login, check-in/out) pass in local compose network.
+
+2. Phase: Managed DB & Migrations — Add Flyway and move DB to managed service.
+   - Tasks: Add Flyway scripts, update application.properties with managed DB.
+   - Command: `mvn flyway:migrate` (CI step)
+   - Completion check: migrations applied in staging.
+
+3. Phase: CI/CD and Image Registry — Automate build, test, and deploy.
+   - Tasks: GitHub Actions, container registry push, deployment manifest (K8s/Container Apps/App Service).
+   - Command: push commit to `main` to trigger CI.
+   - Completion check: deployment to staging succeeded and smoke tests pass.
+
+4. Phase: Production Hardening — Logging, monitoring, rate limiting, secrets.
+   - Tasks: Integrate monitoring, WAF rules, secret management.
+   - Completion check: production runbooks and alerting configured.
+
+---
+
+## **How to use this file**
+
+- Tasks marked with `[x]` are complete. Use the commands beside each planned task to implement and verify.
+- After finishing a task, update this file and mark the item `[x]`. When a phase has all items checked, mark the phase complete in PR description.
+
+---
+
+If you want, I can now: update documentation files in-place, create Dockerfiles, or scaffold Flyway scripts.
