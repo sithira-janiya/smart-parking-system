@@ -14,7 +14,7 @@ import {
 import { motion } from "framer-motion";
 import { loginUser, LoginCredentials } from "../utils/auth";
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<LoginCredentials>({
@@ -40,7 +40,7 @@ export default function LoginPage() {
     event.preventDefault();
 
     if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Username and password are required.");
+      setError("Admin username and password are required.");
       return;
     }
 
@@ -48,14 +48,14 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await loginUser(formData, "USER");
-      navigate("/dashboard", { replace: true });
+      await loginUser(formData, "ADMIN");
+      navigate("/admin/slots", { replace: true });
     } catch (err: any) {
       setError(
         err.response?.data?.error ||
           err.response?.data?.message ||
           err.message ||
-          "Login failed. Please check your user credentials.",
+          "Admin login failed. Please check administrator credentials.",
       );
     } finally {
       setLoading(false);
@@ -82,7 +82,7 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65 }}
             >
-              <span className="hero-badge">🚘 User Parking Portal</span>
+              <span className="hero-badge">🛡️ Administrator Access</span>
 
               <Typography
                 variant="h1"
@@ -95,9 +95,9 @@ export default function LoginPage() {
                   letterSpacing: "-2px",
                 }}
               >
-                Park smarter.
+                Control slots.
                 <br />
-                Move faster.
+                Secure operations.
               </Typography>
 
               <Typography
@@ -109,9 +109,9 @@ export default function LoginPage() {
                   lineHeight: 1.75,
                 }}
               >
-                Access your parking dashboard, check live availability, view
-                parking activity, and continue secure operations with JWT-based
-                authentication.
+                Dedicated administrator login for managing parking slots,
+                monitoring operations, and accessing protected admin-only
+                controls.
               </Typography>
 
               <Stack
@@ -120,9 +120,9 @@ export default function LoginPage() {
                 sx={{ mt: 4 }}
               >
                 {[
-                  ["⚡", "Fast Access"],
-                  ["🔐", "Secure Login"],
-                  ["📊", "Live Dashboard"],
+                  ["🛠️", "Slot Control"],
+                  ["🔒", "Admin Only"],
+                  ["📡", "Operations View"],
                 ].map(([icon, title]) => (
                   <motion.div
                     key={title}
@@ -158,11 +158,10 @@ export default function LoginPage() {
                     transition={{ delay: 0.35 }}
                   >
                     <Typography sx={{ color: "#bfdbfe", fontWeight: 900 }}>
-                      User Parking Experience
+                      Protected Admin Portal
                     </Typography>
                     <Typography sx={{ color: "#e5e7eb", mt: 0.8 }}>
-                      Clean monitoring, quick decisions, and smooth parking
-                      flow.
+                      This route accepts only accounts with the ADMIN role.
                     </Typography>
                   </motion.div>
                 </div>
@@ -183,6 +182,7 @@ export default function LoginPage() {
                   p: { xs: 3, sm: 5 },
                   maxWidth: 500,
                   mx: "auto",
+                  border: "1px solid rgba(248, 113, 113, 0.25)",
                 }}
               >
                 <Stack alignItems="center" spacing={2} sx={{ mb: 4 }}>
@@ -202,11 +202,11 @@ export default function LoginPage() {
                         display: "grid",
                         placeItems: "center",
                         fontSize: 44,
-                        background: "linear-gradient(135deg, #2563eb, #06b6d4)",
-                        boxShadow: "0 22px 48px rgba(37, 99, 235, 0.38)",
+                        background: "linear-gradient(135deg, #7c3aed, #ef4444)",
+                        boxShadow: "0 22px 48px rgba(239, 68, 68, 0.28)",
                       }}
                     >
-                      🚗
+                      🛡️
                     </Box>
                   </motion.div>
 
@@ -214,11 +214,11 @@ export default function LoginPage() {
                     variant="h4"
                     sx={{ color: "white", fontWeight: 950 }}
                   >
-                    User Login
+                    Admin Login
                   </Typography>
 
                   <Typography sx={{ color: "#94a3b8", textAlign: "center" }}>
-                    Sign in with a normal parking user account.
+                    Sign in with an administrator account only.
                   </Typography>
                 </Stack>
 
@@ -233,7 +233,7 @@ export default function LoginPage() {
                     <TextField
                       className="dark-input"
                       fullWidth
-                      label="Username"
+                      label="Admin Username"
                       name="username"
                       value={formData.username}
                       onChange={handleInputChange}
@@ -244,7 +244,7 @@ export default function LoginPage() {
                     <TextField
                       className="dark-input"
                       fullWidth
-                      label="Password"
+                      label="Admin Password"
                       name="password"
                       type="password"
                       value={formData.password}
@@ -262,34 +262,14 @@ export default function LoginPage() {
                         type="submit"
                         size="large"
                         disabled={loading}
-                        className="gradient-button"
+                        className="danger-button"
                         sx={{ py: 1.65, mt: 1 }}
                       >
                         {loading ? (
                           <CircularProgress size={24} sx={{ color: "white" }} />
                         ) : (
-                          "Open User Dashboard"
+                          "Open Admin Panel"
                         )}
-                      </Button>
-                    </motion.div>
-
-                    <motion.div
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      <Button
-                        fullWidth
-                        type="button"
-                        size="large"
-                        className="outline-button"
-                        onClick={() => navigate("/admin/login")}
-                        sx={{
-                          py: 1.45,
-                          borderRadius: "999px",
-                          mt: 0.5,
-                        }}
-                      >
-                        Admin Login
                       </Button>
                     </motion.div>
 
@@ -299,16 +279,22 @@ export default function LoginPage() {
                         p: 2.4,
                         borderRadius: 5,
                         background: "rgba(15, 23, 42, 0.72)",
-                        border: "1px solid rgba(148, 163, 184, 0.18)",
+                        border: "1px solid rgba(248, 113, 113, 0.2)",
                       }}
                     >
-                      <Typography sx={{ color: "#e2e8f0", fontWeight: 900 }}>
-                        User Access
+                      <Typography sx={{ color: "#fecaca", fontWeight: 900 }}>
+                        Restricted Area
                       </Typography>
 
                       <Typography sx={{ color: "#94a3b8", mt: 1 }}>
-                        This page is for normal parking users. Administrators
-                        should use the Admin Login button.
+                        Only users with the ADMIN role can continue from this
+                        login screen.
+                      </Typography>
+
+                      <Typography
+                        sx={{ color: "#64748b", mt: 0.8, fontSize: 13 }}
+                      >
+                        Normal users should sign in from /login.
                       </Typography>
                     </Box>
                   </Stack>

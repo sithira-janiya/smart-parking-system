@@ -6,22 +6,36 @@ import {
 } from "react-router-dom";
 
 import LoginPage from "./pages/LoginPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminSlotsPage from "./pages/AdminSlotsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { getRedirectPath, getUserRole, isAuthenticated } from "./utils/auth";
 
 function App() {
+  const authenticated = isAuthenticated();
+
   return (
     <Router>
       <Routes>
         <Route
           path="/login"
           element={
-            isAuthenticated() ? (
+            authenticated ? (
               <Navigate to={getRedirectPath(getUserRole())} replace />
             ) : (
               <LoginPage />
+            )
+          }
+        />
+
+        <Route
+          path="/admin/login"
+          element={
+            authenticated ? (
+              <Navigate to={getRedirectPath(getUserRole())} replace />
+            ) : (
+              <AdminLoginPage />
             )
           }
         />
@@ -38,7 +52,7 @@ function App() {
           path="/"
           element={
             <Navigate
-              to={isAuthenticated() ? getRedirectPath(getUserRole()) : "/login"}
+              to={authenticated ? getRedirectPath(getUserRole()) : "/login"}
               replace
             />
           }
