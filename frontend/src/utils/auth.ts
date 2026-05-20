@@ -92,6 +92,7 @@ export function hasRequiredRole(allowedRoles?: UserRole[]): boolean {
 
 export async function loginUser(
   credentials: LoginCredentials,
+  expectedRole?: UserRole,
 ): Promise<{ token: string; role: UserRole; username: string }> {
   const response = await axiosInstance.post<AuthResponse>(
     "/auth/login",
@@ -109,6 +110,14 @@ export async function loginUser(
 
   if (!role) {
     throw new Error("JWT token does not include a valid role.");
+  }
+
+  if (expectedRole && role !== expectedRole) {
+    throw new Error(
+      expectedRole === "ADMIN"
+        ? "This account is not an administrator account."
+        : "Administrator accounts must use the admin login page.",
+    );
   }
 
   const username =
